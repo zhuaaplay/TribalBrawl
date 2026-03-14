@@ -2,129 +2,161 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Party Animals – Ancient Ruins Map</title>
+<title>Tribal Brawl – Arena 3D</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #1a2a1a; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
   #canvas-container { width: 100vw; height: 100vh; }
+  #ui-info {
+    position: absolute; top: 20px; left: 20px; color: white;
+    background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px;
+    pointer-events: none; border: 1px solid #4a8030;
+  }
 </style>
 </head>
 <body>
+<div id="ui-info">
+  <h2 style="margin-bottom:5px">Tribal Brawl Arena</h2>
+  <p style="font-size:14px; opacity:0.8">Karakter: Barbarian</p>
+  <hr style="margin:10px 0; opacity:0.3">
+  <p style="font-size:12px">Orbit: Left Click | Zoom: Scroll | Pan: Right Click</p>
+</div>
 <div id="canvas-container"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
-<!-- Embedded GLTFLoader (sama seperti asli, tanpa perubahan) -->
-<script>
-// ... (paste seluruh GLTFLoader embedded code dari file asli kamu di sini, bagian function _parseGLB dll sampai onLoad({scene:group...}))
-// Ini panjang, copy dari kode original yang kamu punya di <script> bagian loader.
-</script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 
 <script>
-// ─── SCENE SETUP ───────────────────────────────────────────────────────────
-const container = document.getElementById('canvas-container');
+// ─── SETUP DUNIA 3D ────────────────────────────────────────────────────────
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x7ab87a);
-scene.fog = new THREE.Fog(0x7ab87a, 40, 120);
+scene.fog = new THREE.Fog(0x7ab87a, 30, 100);
 
-const W = window.innerWidth, H = window.innerHeight;
-const camera = new THREE.PerspectiveCamera(50, W/H, 0.1, 200);
-camera.position.set(18, 22, 28);
-camera.lookAt(0, 0, 0);
-
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(W, H);
+renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
-container.appendChild(renderer.domElement);
+document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-// ─── LIGHTS ────────────────────────────────────────────────────────────────
-const sun = new THREE.DirectionalLight(0xfff8e0, 2.0);
-sun.position.set(15, 30, 10);
+// Pencahayaan
+const sun = new THREE.DirectionalLight(0xfff8e0, 1.8);
+sun.position.set(10, 20, 10);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 0.5;
-sun.shadow.camera.far = 100;
-sun.shadow.camera.left = -25;
-sun.shadow.camera.right = 25;
-sun.shadow.camera.top = 25;
-sun.shadow.camera.bottom = -25;
-sun.shadow.bias = -0.001;
 scene.add(sun);
+scene.add(new THREE.AmbientLight(0xffffff, 0.6));
 
-scene.add(new THREE.AmbientLight(0x88bbaa, 0.8));
-
-const fill = new THREE.DirectionalLight(0x80c8ff, 0.4);
-fill.position.set(-10, 10, -10);
-scene.add(fill);
-
-// ─── MATERIALS (tanpa roofMat/goldMat kuning) ──────────────────────────────
-const stoneMat    = new THREE.MeshLambertMaterial({ color: 0xc8c8b4 });
-const stoneDarkMat= new THREE.MeshLambertMaterial({ color: 0xa0a090 });
-const stoneOldMat = new THREE.MeshLambertMaterial({ color: 0xb0b0a0 });
-const grassMat    = new THREE.MeshLambertMaterial({ color: 0x5a9440 });
-const mossGrassMat= new THREE.MeshLambertMaterial({ color: 0x4a8030 });
-const dirtMat     = new THREE.MeshLambertMaterial({ color: 0x8a6840 });
-const woodMat     = new THREE.MeshLambertMaterial({ color: 0x8b5e2a });
-const ivyMat      = new THREE.MeshLambertMaterial({ color: 0x2d7a20 });
-const bronzeMat   = new THREE.MeshLambertMaterial({ color: 0xb07020 });
-const treeMat     = new THREE.MeshLambertMaterial({ color: 0x2a6a20 });
-const treeDarkMat = new THREE.MeshLambertMaterial({ color: 0x1e5018 });
-const trunkMat    = new THREE.MeshLambertMaterial({ color: 0x5a3820 });
-const flagMat     = new THREE.MeshLambertMaterial({ color: 0x3050c0, side: THREE.DoubleSide });
-const waterMat    = new THREE.MeshLambertMaterial({ color: 0x40a0c0, transparent: true, opacity: 0.7 });
-
-// ─── HELPERS (fungsi box, cyl, dll – copy dari asli kalau ada lebih lengkap) ──
-function box(w,h,d, mat, x,y,z) {
-  const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), mat);
-  m.position.set(x,y,z);
-  m.castShadow = true; m.receiveShadow = true;
-  scene.add(m);
-}
-
-// ... (tambah fungsi cyl, sphere, cone kalau di map asli dipakai, tapi skip cone kuning)
-
-// ─── GROUND & PLATFORM ─────────────────────────────────────────────────────
-const ground = new THREE.Mesh(new THREE.PlaneGeometry(60,60), grassMat);
+// ─── ARENA SEDERHANA ───────────────────────────────────────────────────────
+const groundGeo = new THREE.PlaneGeometry(100, 100);
+const groundMat = new THREE.MeshLambertMaterial({ color: 0x4a8030 });
+const ground = new THREE.Mesh(groundGeo, groundMat);
 ground.rotation.x = -Math.PI/2;
 ground.receiveShadow = true;
 scene.add(ground);
 
-box(14, 0.5, 12, stoneMat, 0, 0.25, 0); // arena platform
+const platformGeo = new THREE.BoxGeometry(16, 0.6, 14);
+const platformMat = new THREE.MeshLambertMaterial({ color: 0xc8c8b4 });
+const platform = new THREE.Mesh(platformGeo, platformMat);
+platform.position.y = 0.3;
+platform.receiveShadow = true;
+platform.castShadow = true;
+scene.add(platform);
 
-// ─── BARBARIAN MODEL (embed base64 asli kamu) ──────────────────────────────
-(function loadBarbarian(){
-  const BARBARIAN_B64 = "PASTE_BASE64_STRING_PANJANG_KAMU_DI_SINI"; // <-- GANTI INI DENGAN BASE64 ASLI DARI FILE KAMU
-  const binary = atob(BARBARIAN_B64);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const loader = new THREE.GLTFLoader();
-  loader.parse(bytes.buffer, '', function(gltf) {
-    const model = gltf.scene;
-    model.scale.set(0.018, 0.018, 0.018);
-    model.position.set(0, 0.55, 0);
-    model.rotation.y = Math.PI * 0.25;
-    model.traverse(n => { if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; } });
-    scene.add(model);
-  }, err => console.error('GLB error:', err));
-})();
+// ─── LOAD KARAKTER BARBARIAN ───────────────────────────────────────────────
+let mixer;
+const loader = new THREE.GLTFLoader();
+const textureLoader = new THREE.TextureLoader();
 
-// ─── ANIMATION LOOP ────────────────────────────────────────────────────────
-function animate() {
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-}
-animate();
-
-// Resize
-window.addEventListener('resize', () => {
-  const W = window.innerWidth, H = window.innerHeight;
-  camera.aspect = W / H;
-  camera.updateProjectionMatrix();
-  renderer.setSize(W, H);
+// Memuat tekstur PNG yang diupload
+const barbarianTexture = textureLoader.load('barbarian_texture.png', (tex) => {
+    tex.flipY = false;
 });
+
+// Memuat model GLB yang diupload
+loader.load('Barbarian.glb', (gltf) => {
+    const model = gltf.scene;
+    
+    model.traverse((child) => {
+        if (child.isMesh) {
+            child.material.map = barbarianTexture;
+            child.castShadow = true;
+            child.receiveShadow = true;
+        }
+    });
+
+    model.scale.set(2.5, 2.5, 2.5);
+    model.position.set(0, 0.6, 0); // Di atas platform
+    scene.add(model);
+
+    // Animasi jika tersedia di file GLB
+    if (gltf.animations && gltf.animations.length > 0) {
+        mixer = new THREE.AnimationMixer(model);
+        mixer.clipAction(gltf.animations[0]).play();
+    }
+    
+    console.log("Barbarian siap bertarung!");
+}, undefined, (err) => console.error("Gagal memuat Barbarian:", err));
+
+// ─── KONTROL KAMERA ────────────────────────────────────────────────────────
+let theta = 0.7, phi = 1.0, radius = 35;
+const target = new THREE.Vector3(0, 2, 0);
+
+function updateCamera() {
+    camera.position.set(
+        target.x + radius * Math.sin(phi) * Math.sin(theta),
+        target.y + radius * Math.cos(phi),
+        target.z + radius * Math.sin(phi) * Math.cos(theta)
+    );
+    camera.lookAt(target);
+}
+
+// Input Mouse
+let isRightMB = false, isLeftMB = false, lastX, lastY;
+window.addEventListener('contextmenu', e => e.preventDefault());
+window.addEventListener('mousedown', e => {
+    if(e.button === 0) isLeftMB = true;
+    if(e.button === 2) isRightMB = true;
+    lastX = e.clientX; lastY = e.clientY;
+});
+window.addEventListener('mouseup', () => { isLeftMB = false; isRightMB = false; });
+window.addEventListener('mousemove', e => {
+    const dx = e.clientX - lastX;
+    const dy = e.clientY - lastY;
+    if(isLeftMB) {
+        theta -= dx * 0.01;
+        phi = Math.max(0.2, Math.min(Math.PI/2 - 0.1, phi + dy * 0.01));
+    }
+    if(isRightMB) {
+        target.x -= dx * 0.05;
+        target.z -= dy * 0.05;
+    }
+    lastX = e.clientX; lastY = e.clientY;
+    updateCamera();
+});
+window.addEventListener('wheel', e => {
+    radius = Math.max(10, Math.min(80, radius + e.deltaY * 0.05));
+    updateCamera();
+});
+
+updateCamera();
+
+// ─── LOOP ANIMASI ──────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+function animate() {
+    requestAnimationFrame(animate);
+    const delta = clock.getDelta();
+    if (mixer) mixer.update(delta);
+    renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+animate();
 </script>
 </body>
 </html>
