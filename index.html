@@ -1,162 +1,76 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Tribal Brawl – Arena 3D</title>
-<style>
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { background: #1a2a1a; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
-  #canvas-container { width: 100vw; height: 100vh; }
-  #ui-info {
-    position: absolute; top: 20px; left: 20px; color: white;
-    background: rgba(0,0,0,0.6); padding: 15px; border-radius: 8px;
-    pointer-events: none; border: 1px solid #4a8030;
-  }
-</style>
+    <meta charset="UTF-8">
+    <title>Tribal Brawl - Barbarian</title>
+    <style>
+        body { margin: 0; overflow: hidden; background: #7ab87a; }
+        #instructions { position: absolute; top: 10px; left: 10px; color: white; font-family: sans-serif; pointer-events: none; }
+    </style>
 </head>
 <body>
-<div id="ui-info">
-  <h2 style="margin-bottom:5px">Tribal Brawl Arena</h2>
-  <p style="font-size:14px; opacity:0.8">Karakter: Barbarian</p>
-  <hr style="margin:10px 0; opacity:0.3">
-  <p style="font-size:12px">Orbit: Left Click | Zoom: Scroll | Pan: Right Click</p>
-</div>
-<div id="canvas-container"></div>
+    <div id="instructions">Tribal Brawl v0.1 - Barbarian Jelly Mode</div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
 
-<script>
-// ─── SETUP DUNIA 3D ────────────────────────────────────────────────────────
-const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x7ab87a);
-scene.fog = new THREE.Fog(0x7ab87a, 30, 100);
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        camera.position.set(0, 5, 10);
 
-const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer({ antialias: true });
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-document.getElementById('canvas-container').appendChild(renderer.domElement);
+        // Pencahayaan
+        scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+        const light = new THREE.DirectionalLight(0xffffff, 1);
+        light.position.set(5, 5, 5);
+        scene.add(light);
 
-// Pencahayaan
-const sun = new THREE.DirectionalLight(0xfff8e0, 1.8);
-sun.position.set(10, 20, 10);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-scene.add(sun);
-scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+        let barbarian;
+        const loader = new THREE.GLTFLoader();
+        const texLoader = new THREE.TextureLoader();
 
-// ─── ARENA SEDERHANA ───────────────────────────────────────────────────────
-const groundGeo = new THREE.PlaneGeometry(100, 100);
-const groundMat = new THREE.MeshLambertMaterial({ color: 0x4a8030 });
-const ground = new THREE.Mesh(groundGeo, groundMat);
-ground.rotation.x = -Math.PI/2;
-ground.receiveShadow = true;
-scene.add(ground);
+        // Load Karakter
+        loader.load('Barbarian.glb', (gltf) => {
+            barbarian = gltf.scene;
+            const texture = texLoader.load('barbarian_texture.png');
+            texture.flipY = false;
 
-const platformGeo = new THREE.BoxGeometry(16, 0.6, 14);
-const platformMat = new THREE.MeshLambertMaterial({ color: 0xc8c8b4 });
-const platform = new THREE.Mesh(platformGeo, platformMat);
-platform.position.y = 0.3;
-platform.receiveShadow = true;
-platform.castShadow = true;
-scene.add(platform);
+            barbarian.traverse(node => {
+                if (node.isMesh) node.material.map = texture;
+            });
+            
+            barbarian.scale.set(2, 2, 2);
+            scene.add(barbarian);
+        });
 
-// ─── LOAD KARAKTER BARBARIAN ───────────────────────────────────────────────
-let mixer;
-const loader = new THREE.GLTFLoader();
-const textureLoader = new THREE.TextureLoader();
+        // Loop Animasi & Efek Jelly
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            if (barbarian) {
+                const time = Date.now() * 0.003;
+                
+                // Efek Napas (Skala naik-turun)
+                const breath = 1 + Math.sin(time) * 0.02;
+                barbarian.scale.set(2 * breath, 2, 2 * breath);
 
-// Memuat tekstur PNG yang diupload
-const barbarianTexture = textureLoader.load('barbarian_texture.png', (tex) => {
-    tex.flipY = false;
-});
+                // Efek Jelly (Goyangan tiap bone)
+                barbarian.traverse(node => {
+                    if (node.isBone && node.name.includes('mixamorig')) {
+                        node.rotation.z = Math.sin(time + node.id) * 0.03;
+                    }
+                });
+            }
 
-// Memuat model GLB yang diupload
-loader.load('Barbarian.glb', (gltf) => {
-    const model = gltf.scene;
-    
-    model.traverse((child) => {
-        if (child.isMesh) {
-            child.material.map = barbarianTexture;
-            child.castShadow = true;
-            child.receiveShadow = true;
+            controls.update();
+            renderer.render(scene, camera);
         }
-    });
-
-    model.scale.set(2.5, 2.5, 2.5);
-    model.position.set(0, 0.6, 0); // Di atas platform
-    scene.add(model);
-
-    // Animasi jika tersedia di file GLB
-    if (gltf.animations && gltf.animations.length > 0) {
-        mixer = new THREE.AnimationMixer(model);
-        mixer.clipAction(gltf.animations[0]).play();
-    }
-    
-    console.log("Barbarian siap bertarung!");
-}, undefined, (err) => console.error("Gagal memuat Barbarian:", err));
-
-// ─── KONTROL KAMERA ────────────────────────────────────────────────────────
-let theta = 0.7, phi = 1.0, radius = 35;
-const target = new THREE.Vector3(0, 2, 0);
-
-function updateCamera() {
-    camera.position.set(
-        target.x + radius * Math.sin(phi) * Math.sin(theta),
-        target.y + radius * Math.cos(phi),
-        target.z + radius * Math.sin(phi) * Math.cos(theta)
-    );
-    camera.lookAt(target);
-}
-
-// Input Mouse
-let isRightMB = false, isLeftMB = false, lastX, lastY;
-window.addEventListener('contextmenu', e => e.preventDefault());
-window.addEventListener('mousedown', e => {
-    if(e.button === 0) isLeftMB = true;
-    if(e.button === 2) isRightMB = true;
-    lastX = e.clientX; lastY = e.clientY;
-});
-window.addEventListener('mouseup', () => { isLeftMB = false; isRightMB = false; });
-window.addEventListener('mousemove', e => {
-    const dx = e.clientX - lastX;
-    const dy = e.clientY - lastY;
-    if(isLeftMB) {
-        theta -= dx * 0.01;
-        phi = Math.max(0.2, Math.min(Math.PI/2 - 0.1, phi + dy * 0.01));
-    }
-    if(isRightMB) {
-        target.x -= dx * 0.05;
-        target.z -= dy * 0.05;
-    }
-    lastX = e.clientX; lastY = e.clientY;
-    updateCamera();
-});
-window.addEventListener('wheel', e => {
-    radius = Math.max(10, Math.min(80, radius + e.deltaY * 0.05));
-    updateCamera();
-});
-
-updateCamera();
-
-// ─── LOOP ANIMASI ──────────────────────────────────────────────────────────
-const clock = new THREE.Clock();
-function animate() {
-    requestAnimationFrame(animate);
-    const delta = clock.getDelta();
-    if (mixer) mixer.update(delta);
-    renderer.render(scene, camera);
-}
-
-window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-});
-
-animate();
-</script>
+        animate();
+    </script>
 </body>
 </html>
