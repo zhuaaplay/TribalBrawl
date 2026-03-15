@@ -1,11 +1,10 @@
-// v4 - bump version to force SW update
 const CACHE_NAME = 'party-animals-v4';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './icons/icon-192x192.png',
-  './icons/icon-512x512.png'
+  './icons/icon-192.png',
+  './icons/icon-512.png'
 ];
 
 self.addEventListener('install', e => {
@@ -14,7 +13,6 @@ self.addEventListener('install', e => {
       .then(cache => cache.addAll(ASSETS))
       .catch(() => {})
   );
-  // Force activate immediately, don't wait
   self.skipWaiting();
 });
 
@@ -30,7 +28,6 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
-  // Network first for HTML/manifest, cache first for assets
   const url = new URL(e.request.url);
   if (url.pathname.endsWith('.html') || url.pathname.endsWith('manifest.json')) {
     e.respondWith(
