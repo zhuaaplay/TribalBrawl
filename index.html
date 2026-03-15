@@ -37,13 +37,31 @@
 }
 
 html, body {
-  width: 100%; height: 100%;
+  width: 100vw;
+  height: 100vh;
+  max-width: 100vw;
+  max-height: 100vh;
   background: black;
   overflow: hidden;
+  position: fixed;
+  /* Paksa konten mengisi seluruh layar termasuk punch-hole */
+  inset: 0 !important;
+  -webkit-inset: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  -webkit-overflow-scrolling: touch;
+  -webkit-appearance: none;
   font-family: 'Fredoka One', cursive;
-  /* Paksa konten ke seluruh layar termasuk punch-hole area */
-  padding: 0;
-  margin: 0;
+}
+
+/* Dukungan layar dinamis — cover safe zone punch-hole */
+@supports (display: grid) {
+  html, body {
+    width: 100dvw;
+    height: 100dvh;
+    max-width: 100dvw;
+    max-height: 100dvh;
+  }
 }
 
 /* Cover seluruh layar termasuk area punch-hole dan edge */
@@ -739,14 +757,26 @@ if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.
 async function goFullscreenLandscape() {
   try {
     const el = document.documentElement;
-    if (el.requestFullscreen)            await el.requestFullscreen({ navigationUI: 'hide' });
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-    else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
+    if (el.requestFullscreen) {
+      await el.requestFullscreen({
+        navigationUI: 'hide',
+        screenOrientation: { angle: 90 } // paksa landscape, cover punch-hole
+      });
+    } else if (el.webkitRequestFullscreen) {
+      el.webkitRequestFullscreen({ navigationUI: 'hide' });
+    } else if (el.mozRequestFullScreen) {
+      el.mozRequestFullScreen();
+    }
   } catch(e) {}
+
   try {
-    if (screen.orientation?.lock)          await screen.orientation.lock('landscape');
-    else if (screen.lockOrientation)       screen.lockOrientation('landscape-primary');
-    else if (screen.mozLockOrientation)    screen.mozLockOrientation('landscape-primary');
+    if (screen.orientation?.lock) {
+      await screen.orientation.lock('landscape');
+    } else if (screen.lockOrientation) {
+      screen.lockOrientation('landscape-primary');
+    } else if (screen.mozLockOrientation) {
+      screen.mozLockOrientation('landscape-primary');
+    }
   } catch(e) {}
 }
 
