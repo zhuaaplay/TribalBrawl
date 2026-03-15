@@ -2,45 +2,47 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- PWA essential meta -->
   <meta name="theme-color" content="#000000" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Hello World" />
-  <meta name="description" content="Hello World PWA" />
+  <meta name="application-name" content="Hello World" />
+  <meta name="description" content="Hello World App" />
 
   <title>Hello World</title>
 
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="icons/icon-192x192.png" />
+  <!-- Manifest - must be correct path -->
+  <link rel="manifest" href="./manifest.json" />
+
+  <!-- Apple touch icons -->
+  <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192x192.png" />
+  <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512x512.png" />
 
   <style>
     *, *::before, *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
+      margin: 0; padding: 0; box-sizing: border-box;
     }
-
     html, body {
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       background: #000;
       overflow: hidden;
     }
-
     body {
       display: flex;
       align-items: center;
       justify-content: center;
     }
-
     p {
       color: #fff;
       font-family: Georgia, 'Times New Roman', serif;
       font-size: 12px;
       font-weight: normal;
       letter-spacing: 0.05em;
+      user-select: none;
     }
   </style>
 </head>
@@ -50,9 +52,18 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js');
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW error:', err));
       });
     }
+
+    // Trigger beforeinstallprompt to catch install event
+    let deferredPrompt;
+    window.addEventListener('beforeinstallprompt', (e) => {
+      deferredPrompt = e;
+      console.log('Install prompt available');
+    });
   </script>
 </body>
 </html>
