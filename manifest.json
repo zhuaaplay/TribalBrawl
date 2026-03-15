@@ -1,8 +1,8 @@
 {
   "name": "Party Animals",
   "short_name": "PartyAnimals",
-  "description": "Party Animals Game Menu",
-  "start_url": "./index.html",
+  "description": "Party Animals Game",
+  "start_url": "./index.html?v=3",
   "display": "fullscreen",
   "background_color": "#F5A11A",
   "theme_color": "#F5A11A",
