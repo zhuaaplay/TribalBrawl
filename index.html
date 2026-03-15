@@ -29,7 +29,6 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* ── FULLSCREEN REDMI 10 - PUNCH HOLE COVER ── */
 :root {
   --sat: env(safe-area-inset-top, 0px);
   --sab: env(safe-area-inset-bottom, 0px);
@@ -38,41 +37,68 @@
 }
 
 html {
-  background: #E8950A;
+  background: #000;
   width: 100%; height: 100%;
   overflow: hidden;
-  /* Tutupi status bar dari atas dengan warna sama */
   padding-top: env(safe-area-inset-top, 0px);
 }
-
-body {
-  width: 100%; height: 100%;
-  background: #E8950A;
-  overflow: hidden;
-  font-family: 'Fredoka One', cursive;
-  padding: 0; margin: 0;
-}
-
-/* Blok oranye solid menutupi area status bar / garis putih */
+/* Tutupi garis putih status bar */
 html::before {
   content: '';
   position: fixed;
   top: -60px; left: -60px; right: -60px;
   height: calc(env(safe-area-inset-top, 0px) + 60px);
-  background: #E8950A;
+  background: #000;
   z-index: 999999;
   pointer-events: none;
 }
 
-/* Cover seluruh layar termasuk area punch-hole dan edge */
-.screen, #rotate-overlay {
-  top: 0; left: 0; right: 0; bottom: 0;
+body {
+  width: 100%; height: 100%;
+  background: #000;
+  overflow: hidden;
+  font-family: 'Fredoka One', cursive;
+  padding: 0; margin: 0;
 }
 
-/* ── TAP TO START OVERLAY ── */
+/* ══════════════════════════════════════
+   ROTATE OVERLAY
+   Muncul saat portrait, sembunyikan game
+══════════════════════════════════════ */
+#rotate-overlay {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 999990;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  color: #fff;
+  font-family: 'Fredoka One', cursive;
+  font-size: clamp(16px, 4vw, 22px);
+  text-align: center;
+  padding: 24px;
+}
+#rotate-overlay .rot-icon {
+  font-size: clamp(48px, 10vw, 72px);
+  animation: rotHint 1.5s ease-in-out infinite alternate;
+}
+@keyframes rotHint {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(90deg); }
+}
+/* Tampilkan saat portrait */
+@media screen and (orientation: portrait) {
+  #rotate-overlay { display: flex; }
+}
+
+/* ══════════════════════════════════════
+   TAP TO START (fullscreen gate)
+══════════════════════════════════════ */
 #tap-start {
   position: fixed; inset: 0;
-  background: #E8950A;
+  background: #000;
   z-index: 99999;
   display: flex;
   align-items: center;
@@ -81,65 +107,266 @@ html::before {
   cursor: pointer;
   user-select: none;
 }
-
 #tap-start-text {
-  font-family: 'Fredoka One', cursive;
-  font-size: clamp(28px, 6vw, 56px);
-  color: #fff;
-  text-shadow: 2px 4px 0 rgba(0,0,0,0.2);
-  transform: skewX(-3deg);
-  letter-spacing: 2px;
-  animation: tapPulse 1.6s ease-in-out infinite;
-}
-@keyframes tapPulse {
-  0%,100% { opacity: 1; transform: skewX(-3deg) scale(1); }
-  50%      { opacity: 0.65; transform: skewX(-3deg) scale(1.06); }
+  font-family: Arial, sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  font-weight: 400;
+  letter-spacing: 0.3px;
+  pointer-events: none;
 }
 
-/* ── ROTATE OVERLAY ── */
-#rotate-overlay {
-  position: fixed;
-  background: rgba(0,0,0,0.92);
-  z-index: 99998;
+/* ══════════════════════════════════════
+   LAYAR HITAM (2 detik setelah tap)
+══════════════════════════════════════ */
+#screen-black {
+  position: fixed; inset: 0;
+  background: #000;
+  z-index: 99990;
   display: none;
-  flex-direction: column;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+#screen-black.show { display: block; opacity: 1; }
+
+/* ══════════════════════════════════════
+   WATERMARK / LOADING SCREEN
+══════════════════════════════════════ */
+#screen-watermark {
+  position: fixed; inset: 0;
+  background: #e8e8e8;
+  z-index: 99980;
+  display: none;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  color: #fff;
-  font-family: 'Fredoka One', cursive;
-  font-size: 18px;
-}
-#rotate-overlay .icon {
-  font-size: 48px;
-  animation: rotate-hint 1.5s ease-in-out infinite alternate;
-}
-@keyframes rotate-hint {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(90deg); }
-}
-@media screen and (orientation: portrait) {
-  #rotate-overlay { display: flex; }
+  opacity: 1;
+  font-family: Arial, sans-serif;
 }
 
-/* ── SCREENS ── */
-.screen {
+#watermark-img {
+  width: auto; height: auto;
+  max-width: 65%; max-height: 55%;
+  object-fit: contain; object-position: center;
+  display: block;
+}
+
+.wm-corner {
+  position: absolute;
+  color: #666;
+  line-height: 1.45;
+}
+
+#wm-top-left {
+  top: 22px; left: 24px;
+  font-size: clamp(9px, 1.1vw, 13px);
+}
+#wm-top-left .wm-version { font-weight: 700; color: #555; display: block; }
+#wm-top-left .wm-server  { font-weight: 400; color: #777; display: block; font-size: clamp(8px, 1vw, 12px); }
+
+/* Kiri bawah — spinner + status teks */
+#wm-bot-left {
+  bottom: 20px; left: 22px;
+  display: flex; align-items: center; gap: 8px;
+}
+.wm-spinner {
+  width: clamp(10px, 1.4vw, 14px);
+  height: clamp(10px, 1.4vw, 14px);
+  border-radius: 50%;
+  border: 2px solid #ccc;
+  border-top-color: #555;
+  animation: wmSpin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes wmSpin { to { transform: rotate(360deg); } }
+
+#wm-status-label {
+  font-weight: 700; color: #444;
+  font-size: clamp(9px, 1.15vw, 13px);
+  transition: opacity 0.3s ease;
+}
+#wm-status-sub {
+  font-weight: 400; color: #777;
+  font-size: clamp(9px, 1.15vw, 13px);
+  transition: opacity 0.3s ease;
+}
+
+#wm-bot-right {
+  bottom: 20px; right: 22px;
+  font-size: clamp(8px, 1vw, 12px);
+  color: #888; font-weight: 400;
+}
+
+/* ══════════════════════════════════════
+   ACCOUNT MODAL
+══════════════════════════════════════ */
+#account-modal-dim {
   position: fixed; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.4s ease;
+  background: rgba(0,0,0,0.45);
+  z-index: 99985;
+  display: none;
+  align-items: center;
+  justify-content: center;
 }
-.screen.active { opacity: 1; pointer-events: all; }
+#account-modal-dim.show { display: flex; }
 
-/* ── MAIN BACKGROUND ── */
+#account-modal {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px 20px 16px;
+  width: min(340px, 85vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.22);
+  display: flex; flex-direction: column; gap: 9px;
+  transform: translateY(60px);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1), opacity 0.35s ease;
+}
+#account-modal.open {
+  transform: translateY(0);
+  opacity: 1;
+}
+#account-modal.closing {
+  transform: translateY(60px);
+  opacity: 0;
+  transition: transform 0.28s ease, opacity 0.25s ease;
+}
+
+.modal-title {
+  font-family: Arial, sans-serif;
+  font-size: clamp(13px, 1.6vw, 15px);
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+.modal-desc {
+  font-family: Arial, sans-serif;
+  font-size: clamp(9px, 1vw, 11px);
+  color: #888;
+  line-height: 1.5;
+  margin-top: -4px;
+}
+
+/* Avatar */
+.modal-avatar-wrap {
+  display: flex; justify-content: center;
+  margin: 2px 0;
+}
+#avatar-btn {
+  width: clamp(48px, 6vw, 58px);
+  height: clamp(48px, 6vw, 58px);
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2.5px solid #eee;
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+  background: #f0f0f0;
+  transition: border-color 0.2s;
+}
+#avatar-btn:hover { border-color: #bbb; }
+#avatar-btn img {
+  width: 100%; height: 100%;
+  object-fit: cover; display: block;
+}
+#avatar-btn .avatar-edit {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.28);
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.2s;
+  font-size: 14px; color: #fff;
+}
+#avatar-btn:hover .avatar-edit { opacity: 1; }
+#avatar-input { display: none; }
+
+/* Fields */
+.modal-fields { display: flex; flex-direction: column; gap: 7px; }
+.field-group { display: flex; flex-direction: column; gap: 3px; }
+.field-label {
+  font-family: Arial, sans-serif;
+  font-size: clamp(8px, 0.9vw, 10px);
+  color: #999; font-weight: 600;
+  letter-spacing: 0.3px;
+}
+.field-input {
+  width: 100%;
+  background: #f5f5f5;
+  border: 1.5px solid #e0e0e0;
+  border-radius: 999px;
+  padding: 7px 13px;
+  font-family: Arial, sans-serif;
+  font-size: clamp(10px, 1.2vw, 12px);
+  color: #222; outline: none;
+  transition: border-color 0.2s;
+}
+.field-input:focus { border-color: #aaa; background: #fff; }
+.field-input.error { border-color: #ff5555; background: #fff5f5; }
+.field-hint {
+  font-family: Arial, sans-serif;
+  font-size: clamp(7px, 0.85vw, 9px);
+  color: #bbb; padding-left: 12px;
+}
+
+/* Create button */
+#btn-create {
+  width: 100%;
+  padding: 9px;
+  border-radius: 999px;
+  background: #1a1a1a;
+  color: #fff;
+  font-family: Arial, sans-serif;
+  font-size: clamp(11px, 1.3vw, 13px);
+  font-weight: 700;
+  border: none; cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+  margin-top: 2px;
+}
+#btn-create:active { opacity: 0.8; transform: scale(0.98); }
+
+#modal-field-error {
+  font-family: Arial, sans-serif;
+  font-size: clamp(8px, 1vw, 10px);
+  color: #ff5555;
+  text-align: center;
+  min-height: 14px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+#modal-field-error.show { opacity: 1; }
+
+/* ══════════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════════ */
+#screen-game {
+  position: fixed; inset: 0;
+  opacity: 0;
+  pointer-events: none;
+  display: none;
+  z-index: 1;
+}
+#screen-game.active {
+  display: block;
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* Background — pakai gambar mainmenubackground.png */
 .bg {
   position: fixed;
   top: -100px; left: -100px; right: -100px; bottom: -100px;
-  background: radial-gradient(ellipse 70% 75% at 50% 55%,
-    #FBCF5A 0%, #F5A11A 52%, #D87800 100%);
+  background: url('assets/mainmenubackground.png') no-repeat center center / cover;
   z-index: 0;
+  will-change: transform;
 }
 
+/* Animasi kamera turun: dari atas langsung turun ke posisi normal */
+@keyframes cameraDown {
+  0%   { transform: translateY(-100%); }
+  100% { transform: translateY(0%); }
+}
+.bg.camera-anim {
+  animation: cameraDown 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
 .ground-shadow {
   position: fixed;
   bottom: 70px; left: 50%;
@@ -150,28 +377,20 @@ html::before {
   z-index: 1;
 }
 
-/* ── GAME SCREEN ── */
-#screen-game {
-  z-index: 2;
-}
-
-/* ── LAYOUT ── */
+/* Inner layout */
 .game-inner {
   position: fixed; inset: 0;
   z-index: 10;
 }
 
-/* ── LEFT MENU ── */
+/* Left menu */
 .menu-list {
   position: absolute;
-  left: 56px;
-  top: 50%;
+  left: 56px; top: 50%;
   transform: translateY(-46%);
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   gap: 2px;
 }
-
 .menu-item {
   font-family: 'Fredoka One', cursive;
   font-size: clamp(20px, 4vw, 46px);
@@ -189,21 +408,18 @@ html::before {
   -webkit-tap-highlight-color: transparent;
   transition: color 0.1s, transform 0.1s;
 }
-.menu-item:active,
-.menu-item:hover {
+.menu-item:active, .menu-item:hover {
   color: #FFE566;
   transform: skewX(-3deg) translateX(6px) scale(1.04);
 }
 .menu-item.gap-top { margin-top: 18px; }
 
-/* ── RIGHT PANEL ── */
+/* Right panel */
 .right-panel {
   position: absolute;
-  right: 16px;
-  top: 50%;
+  right: 16px; top: 50%;
   transform: translateY(-50%);
-  display: flex;
-  flex-direction: column;
+  display: flex; flex-direction: column;
   gap: 10px;
   width: clamp(150px, 20vw, 215px);
 }
@@ -213,10 +429,8 @@ html::before {
   background: #4A6EE0;
   border-radius: 18px;
   padding: 10px 12px 10px 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 6px;
+  display: flex; align-items: center;
+  justify-content: space-between; gap: 6px;
   transform: rotate(1.5deg) skewX(-1deg);
   box-shadow: 0 4px 0 #2A4EBF, 0 6px 18px rgba(0,0,0,0.3);
   cursor: pointer;
@@ -228,14 +442,12 @@ html::before {
   font-size: clamp(13px, 1.9vw, 20px);
   color: #fff;
   text-shadow: 1px 2px 0 rgba(0,0,0,0.2);
-  line-height: 1.2;
-  flex: 1;
+  line-height: 1.2; flex: 1;
 }
 .forum-img {
   font-size: clamp(28px, 4.5vw, 48px);
   filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));
-  flex-shrink: 0;
-  line-height: 1;
+  flex-shrink: 0; line-height: 1;
 }
 
 /* Ads card */
@@ -250,9 +462,7 @@ html::before {
 }
 .ads-card:active { transform: rotate(-1deg) skewX(0.5deg) scale(0.97); }
 .ads-inner {
-  position: relative;
-  width: 100%;
-  padding-top: 125%;
+  position: relative; width: 100%; padding-top: 125%;
   background: linear-gradient(160deg, #1a0505 0%, #300000 45%, #080000 100%);
 }
 .ads-glow {
@@ -262,13 +472,10 @@ html::before {
     radial-gradient(ellipse 40% 30% at 50% 70%, rgba(180,0,0,0.2) 0%, transparent 60%);
 }
 .ads-silhouette {
-  position: absolute;
-  top: 4%; left: 50%;
+  position: absolute; top: 4%; left: 50%;
   transform: translateX(-50%);
   font-size: clamp(42px, 7vw, 72px);
-  filter:
-    drop-shadow(0 0 16px rgba(255,0,0,0.9))
-    drop-shadow(0 0 36px rgba(200,0,0,0.6));
+  filter: drop-shadow(0 0 16px rgba(255,0,0,0.9)) drop-shadow(0 0 36px rgba(200,0,0,0.6));
   animation: floatFig 3s ease-in-out infinite;
   line-height: 1;
 }
@@ -277,15 +484,13 @@ html::before {
   50%      { transform: translateX(-50%) translateY(-4px); }
 }
 .ads-eyes {
-  position: absolute;
-  top: 27%; left: 50%;
+  position: absolute; top: 27%; left: 50%;
   transform: translateX(-50%);
   display: flex; gap: 10px;
 }
 .ads-eye {
   width: 11px; height: 11px;
-  background: #FF1A00;
-  border-radius: 50%;
+  background: #FF1A00; border-radius: 50%;
   box-shadow: 0 0 6px #FF2200, 0 0 16px rgba(255,34,0,0.8);
   animation: eyePulse 1.8s ease-in-out infinite;
 }
@@ -295,167 +500,170 @@ html::before {
   50%      { box-shadow: 0 0 10px #FF4400, 0 0 26px rgba(255,68,0,0.95); }
 }
 .ads-title {
-  position: absolute;
-  bottom: 16%; left: 50%;
+  position: absolute; bottom: 16%; left: 50%;
   transform: translateX(-50%);
-  text-align: center;
-  white-space: nowrap;
+  text-align: center; white-space: nowrap;
 }
 .ads-title .the {
   font-family: 'Fredoka One', cursive;
-  font-size: clamp(11px, 1.6vw, 16px);
-  color: #fff;
-  display: block;
-  letter-spacing: 4px;
+  font-size: clamp(11px, 1.6vw, 16px); color: #fff;
+  display: block; letter-spacing: 4px;
   text-shadow: 0 0 10px rgba(255,0,0,0.5);
 }
 .ads-title .lamb {
   font-family: 'Fredoka One', cursive;
-  font-size: clamp(20px, 3vw, 30px);
-  color: #fff;
-  display: block;
-  letter-spacing: 3px;
+  font-size: clamp(20px, 3vw, 30px); color: #fff;
+  display: block; letter-spacing: 3px;
   text-shadow: 0 0 14px rgba(255,30,0,0.8), 2px 2px 0 rgba(0,0,0,0.6);
   line-height: 1;
 }
 .ads-dots {
-  position: absolute;
-  bottom: 6%; left: 50%;
+  position: absolute; bottom: 6%; left: 50%;
   transform: translateX(-50%);
   display: flex; gap: 5px;
 }
-.ads-dot {
-  width: 6px; height: 6px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.28);
-}
+.ads-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.28); }
 .ads-dot.active { background: rgba(255,255,255,0.9); }
 
-/* ── BOTTOM BAR ── */
+/* Bottom bar */
 .bottom-bar {
-  position: fixed;
-  bottom: 0; left: 0; right: 0;
+  position: fixed; bottom: 0; left: 0; right: 0;
   height: 62px;
   background: linear-gradient(180deg, #FAC940 0%, #F5A500 100%);
   border-top: 3px solid #CC7A00;
-  display: flex;
-  align-items: center;
+  display: flex; align-items: center;
   justify-content: space-between;
   padding: 0 14px;
   z-index: 100;
   box-shadow: 0 -2px 10px rgba(0,0,0,0.18);
 }
-
-.bottom-left, .bottom-right {
-  display: flex; align-items: center; gap: 7px;
-}
+.bottom-left, .bottom-right { display: flex; align-items: center; gap: 7px; }
 
 .pill {
   display: flex; align-items: center; gap: 6px;
   background: linear-gradient(180deg, #FFFBEE 0%, #FFE896 100%);
-  border: 2.5px solid #CC7A00;
-  border-radius: 30px;
+  border: 2.5px solid #CC7A00; border-radius: 30px;
   padding: 5px 13px 5px 7px;
   font-family: 'Fredoka One', cursive;
-  font-size: clamp(12px, 1.8vw, 16px);
-  color: #7A3F00;
+  font-size: clamp(12px, 1.8vw, 16px); color: #7A3F00;
   box-shadow: 0 3px 0 #AA6200, inset 0 1px 0 rgba(255,255,255,0.7);
-  cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  white-space: nowrap;
-  position: relative;
-  user-select: none;
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  white-space: nowrap; position: relative; user-select: none;
 }
 .pill:active { transform: translateY(2px); box-shadow: 0 1px 0 #AA6200; }
-
 .pill-icon {
-  width: 28px; height: 28px;
-  border-radius: 50%;
+  width: 28px; height: 28px; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 14px;
-  flex-shrink: 0;
+  font-size: 14px; flex-shrink: 0;
 }
 .pill-icon.shop { background: linear-gradient(135deg, #FF9A3C, #FF5500); }
 .pill-icon.bone { background: linear-gradient(135deg, #FFE580, #FFC200); border: 2px solid #CC8800; }
 .pill-icon.cash { background: linear-gradient(135deg, #A8FF78, #2ECC40); border-radius: 7px; }
-
 .notif-dot {
-  position: absolute;
-  top: 2px; right: 2px;
+  position: absolute; top: 2px; right: 2px;
   width: 9px; height: 9px;
-  background: #FF2D2D;
-  border-radius: 50%;
-  border: 1.5px solid #fff;
+  background: #FF2D2D; border-radius: 50%; border: 1.5px solid #fff;
 }
-
 .player-pill {
   display: flex; align-items: center; gap: 7px;
   background: linear-gradient(180deg, #FFFBEE 0%, #FFE896 100%);
-  border: 2.5px solid #CC7A00;
-  border-radius: 30px;
+  border: 2.5px solid #CC7A00; border-radius: 30px;
   padding: 4px 11px 4px 4px;
   box-shadow: 0 3px 0 #AA6200, inset 0 1px 0 rgba(255,255,255,0.7);
 }
 .player-avatar {
-  width: 34px; height: 34px;
-  border-radius: 50%;
+  width: 34px; height: 34px; border-radius: 50%;
   background: linear-gradient(135deg, #FFE04A, #FF9A00);
   border: 2.5px solid #CC7A00;
   display: flex; align-items: center; justify-content: center;
-  font-size: 17px;
-  box-shadow: 0 2px 0 #AA6200;
-  position: relative;
-  overflow: visible;
-  flex-shrink: 0;
+  font-size: 17px; box-shadow: 0 2px 0 #AA6200;
+  position: relative; overflow: visible; flex-shrink: 0;
 }
 .player-name {
   font-family: 'Fredoka One', cursive;
-  font-size: clamp(12px, 1.7vw, 15px);
-  color: #7A3F00;
-  line-height: 1;
+  font-size: clamp(12px, 1.7vw, 15px); color: #7A3F00; line-height: 1;
 }
-.xp-bar {
-  width: 58px; height: 6px;
-  background: #CC7A00;
-  border-radius: 4px;
-  margin-top: 4px;
-  overflow: hidden;
-}
-.xp-fill {
-  height: 100%; width: 28%;
-  background: linear-gradient(90deg, #76FF03, #2ECC40);
-  border-radius: 4px;
-}
+.xp-bar { width: 58px; height: 6px; background: #CC7A00; border-radius: 4px; margin-top: 4px; overflow: hidden; }
+.xp-fill { height: 100%; width: 28%; background: linear-gradient(90deg, #76FF03, #2ECC40); border-radius: 4px; }
 .btn-round {
   width: 40px; height: 40px;
   background: linear-gradient(180deg, #FFFBEE 0%, #FFE896 100%);
-  border: 2.5px solid #CC7A00;
-  border-radius: 50%;
+  border: 2.5px solid #CC7A00; border-radius: 50%;
   display: flex; align-items: center; justify-content: center;
-  font-size: 17px;
-  box-shadow: 0 3px 0 #AA6200;
-  cursor: pointer;
-  color: #999;
-  -webkit-tap-highlight-color: transparent;
-  flex-shrink: 0;
+  font-size: 17px; box-shadow: 0 3px 0 #AA6200;
+  cursor: pointer; color: #999;
+  -webkit-tap-highlight-color: transparent; flex-shrink: 0;
 }
 </style>
 </head>
 <body>
 
-<!-- Rotate Overlay -->
+<!-- Rotate Overlay: muncul saat portrait, game berhenti -->
 <div id="rotate-overlay">
-  <div class="icon">📱</div>
-  <div>Putar perangkat ke mode Landscape</div>
+  <div class="rot-icon">📱</div>
+  <div>Putar perangkat ke mode Landscape<br>untuk memulai game</div>
 </div>
 
-<!-- Tap To Start: fullscreen gate — TANPA PIN, cukup tap di mana saja -->
+<!-- Layar hitam transisi -->
+<div id="screen-black"></div>
+
+<!-- Watermark / loading screen -->
+<div id="screen-watermark">
+  <div class="wm-corner" id="wm-top-left">
+    <span class="wm-version">Version 1.0.3</span>
+    <span class="wm-server">Global Server - Asia</span>
+  </div>
+
+  <img id="watermark-img" src="assets/watermark.png" alt="Party Animals">
+
+  <div class="wm-corner" id="wm-bot-left">
+    <div class="wm-spinner"></div>
+    <span id="wm-status-label"></span>
+    <span id="wm-status-sub"></span>
+  </div>
+
+  <div class="wm-corner" id="wm-bot-right">© 2026 Source xyuaUi</div>
+</div>
+
+<!-- Account Modal -->
+<div id="account-modal-dim">
+  <div id="account-modal">
+    <div class="modal-title">Create Your Account</div>
+    <div class="modal-desc">Create an account to save all your achievements in the game. Your data will not be misused.</div>
+
+    <div class="modal-avatar-wrap">
+      <div id="avatar-btn">
+        <img id="avatar-preview" src="assets/user.png" alt="Profile">
+        <div class="avatar-edit">✏️</div>
+      </div>
+      <input type="file" id="avatar-input" accept="image/*">
+    </div>
+
+    <div class="modal-fields">
+      <div class="field-group">
+        <div class="field-label">First name</div>
+        <input class="field-input" id="input-firstname" type="text" placeholder="Enter first name" maxlength="10">
+        <div class="field-hint">Min 3, max 10 characters</div>
+      </div>
+      <div class="field-group">
+        <div class="field-label">Last name <span style="color:#ccc;font-weight:400">(optional)</span></div>
+        <input class="field-input" id="input-lastname" type="text" placeholder="Enter last name" maxlength="5">
+        <div class="field-hint">Optional · max 5 characters</div>
+      </div>
+    </div>
+
+    <div id="modal-field-error"></div>
+    <button id="btn-create">Create</button>
+  </div>
+</div>
+
+<!-- Tap To Start -->
 <div id="tap-start">
-  <div id="tap-start-text">TAP TO PLAY</div>
+  <div id="tap-start-text">press for fullscreen mode</div>
 </div>
 
 <!-- GAME SCREEN -->
-<div id="screen-game" class="screen active">
+<div id="screen-game">
   <div class="bg"></div>
   <div class="ground-shadow"></div>
 
@@ -532,57 +740,286 @@ html::before {
 </div>
 
 <script>
+const wait = ms => new Promise(r => setTimeout(r, ms));
 
 // ── Standalone detect ──
 if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
   document.body.classList.add('standalone');
 }
 
-// ── Fullscreen + Orientation (Redmi 10 / MIUI optimized) ──
+// ── Fullscreen + Orientation ──
 async function goFullscreenLandscape() {
   try {
     const el = document.documentElement;
-    if (el.requestFullscreen) {
-      await el.requestFullscreen({ navigationUI: 'hide' });
-    } else if (el.webkitRequestFullscreen) {
-      el.webkitRequestFullscreen();
-    } else if (el.mozRequestFullScreen) {
-      el.mozRequestFullScreen();
-    }
+    if (el.requestFullscreen)            await el.requestFullscreen({ navigationUI: 'hide' });
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.mozRequestFullScreen)    el.mozRequestFullScreen();
   } catch(e) {}
-
   try {
-    if (screen.orientation?.lock) {
-      await screen.orientation.lock('landscape');
-    } else if (screen.lockOrientation) {
-      screen.lockOrientation('landscape-primary');
-    } else if (screen.mozLockOrientation) {
-      screen.mozLockOrientation('landscape-primary');
-    }
+    if (screen.orientation?.lock)          await screen.orientation.lock('landscape');
+    else if (screen.lockOrientation)       screen.lockOrientation('landscape-primary');
+    else if (screen.mozLockOrientation)    screen.mozLockOrientation('landscape-primary');
   } catch(e) {}
+}
+
+function isLandscape() { return window.innerWidth > window.innerHeight; }
+
+// ── Elements ──
+const tapStart        = document.getElementById('tap-start');
+const screenBlack     = document.getElementById('screen-black');
+const screenWatermark = document.getElementById('screen-watermark');
+const screenGame      = document.getElementById('screen-game');
+const statusLabel     = document.getElementById('wm-status-label');
+const statusSub       = document.getElementById('wm-status-sub');
+
+// ── Set loading status text ──
+async function setStatus(label, sub, ms) {
+  statusLabel.style.opacity = '0';
+  statusSub.style.opacity   = '0';
+  await wait(200);
+  statusLabel.textContent = label;
+  statusSub.textContent   = sub || '';
+  statusLabel.style.opacity = '1';
+  statusSub.style.opacity   = '1';
+  await wait(ms);
+}
+
+// ── Account helpers ──
+function getAccount() {
+  try { return JSON.parse(localStorage.getItem('pa_account')) || null; } catch { return null; }
+}
+function saveAccount(data) {
+  localStorage.setItem('pa_account', JSON.stringify(data));
+}
+
+// ── Avatar crop to 1:1 ──
+function cropSquare(src) {
+  return new Promise(resolve => {
+    const img = new Image();
+    img.onload = () => {
+      const size = Math.min(img.width, img.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = size;
+      canvas.getContext('2d').drawImage(
+        img,
+        (img.width - size) / 2, (img.height - size) / 2,
+        size, size, 0, 0, size, size
+      );
+      resolve(canvas.toDataURL('image/jpeg', 0.88));
+    };
+    img.src = src;
+  });
+}
+
+// ── Account Modal ──
+let avatarDataUrl = null;
+const modalDim    = document.getElementById('account-modal-dim');
+const modal       = document.getElementById('account-modal');
+const avatarBtn   = document.getElementById('avatar-btn');
+const avatarPrev  = document.getElementById('avatar-preview');
+const avatarInput = document.getElementById('avatar-input');
+const inputFN     = document.getElementById('input-firstname');
+const inputLN     = document.getElementById('input-lastname');
+const btnCreate   = document.getElementById('btn-create');
+const fieldError  = document.getElementById('modal-field-error');
+
+avatarBtn.addEventListener('click', () => avatarInput.click());
+avatarInput.addEventListener('change', async function() {
+  const file = this.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = async e => {
+    const cropped = await cropSquare(e.target.result);
+    avatarDataUrl = cropped;
+    avatarPrev.src = cropped;
+  };
+  reader.readAsDataURL(file);
+});
+
+function openAccountModal() {
+  modalDim.classList.add('show');
+  requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('open')));
+}
+
+function closeAccountModal() {
+  return new Promise(resolve => {
+    modal.classList.remove('open');
+    modal.classList.add('closing');
+    setTimeout(() => {
+      modal.classList.remove('closing');
+      modalDim.classList.remove('show');
+      resolve();
+    }, 300);
+  });
+}
+
+// Returns promise that resolves when account is created or already exists
+function waitForAccount() {
+  return new Promise(resolve => {
+    const existing = getAccount();
+    if (existing) { resolve(existing); return; }
+    openAccountModal();
+
+    btnCreate.onclick = () => {
+      const fn = inputFN.value.trim();
+      const ln = inputLN.value.trim();
+      fieldError.classList.remove('show');
+      inputFN.classList.remove('error');
+      inputLN.classList.remove('error');
+
+      if (fn.length < 3) {
+        inputFN.classList.add('error');
+        fieldError.textContent = 'First name minimum 3 characters.';
+        fieldError.classList.add('show');
+        return;
+      }
+      if (ln.length > 0 && ln.length < 1) {
+        // last name optional but if filled must be valid
+      }
+      if (ln.length > 5) {
+        inputLN.classList.add('error');
+        fieldError.textContent = 'Last name maximum 5 characters.';
+        fieldError.classList.add('show');
+        return;
+      }
+
+      const account = {
+        firstname: fn,
+        lastname:  ln,
+        avatar:    avatarDataUrl || 'assets/user.png'
+      };
+      saveAccount(account);
+      closeAccountModal().then(() => resolve(account));
+    };
+  });
+}
+
+// ── Main loading sequence (total ~50 detik) ──
+async function loadingSequence() {
+  /*
+    Step breakdown (~50 detik total):
+    Connect to server   → 7s
+    Loading resource    → 7s
+    Login               → 6s (+ modal jika belum ada akun)
+    Update resource     → 8s
+    Load resource       → 8s
+    Load assets         → 8s
+    Completed           → 1s lalu fade out
+    Total minimal       = 7+7+6+8+8+8+1 = 45s + fade = ~50s
+  */
+
+  // 1. Connect to server (7s)
+  await setStatus('Connect to server', '', 7000);
+
+  // 2. Loading resource (7s)
+  await setStatus('Loading resource', '', 7000);
+
+  // 3. Login — cek akun, tampilkan modal jika perlu
+  setStatus('Login', '', 0); // tampilkan dulu tanpa wait
+  statusLabel.textContent = 'Login';
+  statusLabel.style.opacity = '1';
+  statusSub.textContent = '';
+
+  // Jika belum ada akun, tunggu user buat — tetap hitung 6 detik setelah modal selesai
+  const account = await waitForAccount();
+  // Tunggu 6 detik dari waktu login (sisanya jika modal cepat)
+  await wait(6000);
+
+  // 4. Update resource (8s)
+  await setStatus('Update resource', '', 8000);
+
+  // 5. Load resource (8s)
+  await setStatus('Load resource', '', 8000);
+
+  // 6. Load assets (8s)
+  await setStatus('Load assets', '', 8000);
+
+  // 7. Completed — tampilkan 2 detik
+  await setStatus('Completed', '', 2000);
+
+  // Siapkan game screen di BELAKANG loading (sudah ada tapi tidak terlihat)
+  screenGame.style.transition = 'none';
+  screenGame.style.opacity = '1';
+  screenGame.style.pointerEvents = 'none';
+  screenGame.classList.add('active');
+
+  // Set semua elemen game mulai dari atas (siap animasi)
+  const bgEl      = document.querySelector('.bg');
+  const gameInner = document.querySelector('.game-inner');
+  const bottomBar = document.querySelector('.bottom-bar');
+  const groundEl  = document.querySelector('.ground-shadow');
+
+  [bgEl, gameInner, bottomBar, groundEl].forEach(el => {
+    if (!el) return;
+    el.style.transition = 'none';
+    el.style.transform  = 'translateY(-100%)';
+  });
+
+  await wait(30);
+
+  // Mulai animasi turun
+  [bgEl, gameInner, bottomBar, groundEl].forEach(el => {
+    if (!el) return;
+    el.style.transition = 'transform 0.85s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+    el.style.transform  = 'translateY(0%)';
+  });
+
+  // Tunggu animasi turun selesai (0.85s)
+  await wait(850);
+
+  // Main menu sudah di posisi — tunggu 2 detik lagi
+  await wait(2000);
+
+  // Baru sembunyikan loading screen langsung tanpa animasi
+  screenWatermark.style.transition = 'none';
+  screenWatermark.style.display    = 'none';
+
+  // Aktifkan interaksi game
+  screenGame.style.pointerEvents = 'all';
+}
+
+// ── Sequence setelah tap ──
+async function startSequence() {
+  if (!isLandscape()) return;
+
+  await goFullscreenLandscape();
+
+  // Fade out tap-start
+  tapStart.style.transition = 'opacity 0.3s ease';
+  tapStart.style.opacity = '0';
+  await wait(320);
+  tapStart.style.display = 'none';
+
+  // Layar hitam 2 detik
+  screenBlack.style.display = 'block';
+  screenBlack.style.opacity = '1';
+  await wait(2000);
+
+  // Fade ke watermark
+  screenBlack.style.transition = 'opacity 0.4s ease';
+  screenBlack.style.opacity = '0';
+  await wait(400);
+  screenBlack.style.display = 'none';
+
+  // Tampilkan watermark langsung tanpa fade in
+  screenWatermark.style.transition = 'none';
+  screenWatermark.style.opacity = '1';
+  screenWatermark.style.display = 'flex';
+
+  // Mulai loading sequence  await loadingSequence();
 }
 
 // ── Tap To Start handler ──
-// Fullscreen selalu dipanggil dari gesture user yang jelas (tap/touch)
-const tapStart = document.getElementById('tap-start');
-
-async function handleTapStart(e) {
-  // Panggil fullscreen dari dalam gesture ini
-  await goFullscreenLandscape();
-  // Fade out overlay
-  tapStart.style.transition = 'opacity 0.4s ease';
-  tapStart.style.opacity = '0';
-  setTimeout(() => { tapStart.style.display = 'none'; }, 420);
+function handleTapStart() {
+  if (!isLandscape()) return;
+  tapStart.removeEventListener('touchstart', handleTapStart);
+  tapStart.removeEventListener('click',      handleTapStart);
+  startSequence();
 }
+tapStart.addEventListener('touchstart', handleTapStart, { passive: true });
+tapStart.addEventListener('click',      handleTapStart);
 
-tapStart.addEventListener('touchstart', handleTapStart, { once: true, passive: true });
-tapStart.addEventListener('click',      handleTapStart, { once: true });
-
-// ── Trigger fullscreen pada interaksi pertama (fallback di luar overlay) ──
-document.addEventListener('touchstart', goFullscreenLandscape, { once: true, passive: true });
-document.addEventListener('click',      goFullscreenLandscape, { once: true });
-
-// ── Re-trigger jika keluar fullscreen (misal notif bar MIUI ditarik) ──
+// ── Re-trigger fullscreen jika keluar ──
 document.addEventListener('fullscreenchange', () => {
   if (!document.fullscreenElement) {
     setTimeout(() => {
@@ -600,7 +1037,16 @@ document.addEventListener('webkitfullscreenchange', () => {
   }
 });
 
-// ── Prevent scroll / pull-to-refresh ──
+// ── Rotate overlay ──
+function checkOrientation() {
+  const rotEl = document.getElementById('rotate-overlay');
+  rotEl.style.display = isLandscape() ? 'none' : 'flex';
+}
+window.addEventListener('resize',            checkOrientation);
+window.addEventListener('orientationchange', checkOrientation);
+checkOrientation();
+
+// ── Prevent scroll ──
 document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 
 // ── Service Worker ──
@@ -609,7 +1055,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', { scope: './' });
   });
 }
-
 </script>
 </body>
 </html>
