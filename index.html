@@ -47,25 +47,30 @@
       --safe-bot:   env(safe-area-inset-bottom,0px);
     }
 
-    html, body {
-      width: 100%;
-      height: 100%;
-      /* NO padding on html/body — let background bleed under notch */
+    html {
+      background: #F5A11A;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      margin: 0; padding: 0;
+    }
+
+    body {
+      width: 100%; height: 100%;
       overflow: hidden;
       background: #F5A11A;
       font-family: 'Fredoka One', cursive;
       position: relative;
+      margin: 0; padding: 0;
     }
 
-    /* Full-bleed background — covers ENTIRE screen including notch/punch-hole area */
+    /* Full-bleed — oversized 200px in all directions to kill any gap */
     body::before {
       content: '';
       position: fixed;
-      /* Extend beyond safe area in all directions */
-      top:    -50px;
-      left:   -50px;
-      right:  -50px;
-      bottom: -50px;
+      top:    -200px;
+      left:   -200px;
+      right:  -200px;
+      bottom: -200px;
       background: radial-gradient(ellipse 65% 70% at 52% 50%,
         #FBCF5A 0%, #F5A11A 55%, #D87800 100%);
       z-index: 0;
@@ -97,8 +102,11 @@
     /* ===== LEFT MENU ===== */
     .menu-list {
       position: absolute;
-      /* Push menu right to avoid punch-hole, use safe-area + fallback */
-      left: max(env(safe-area-inset-left, 0px), 18px);
+      /*
+        Redmi 10 punch-hole landscape: kamera ada di kiri atas ~40-50px dari tepi.
+        Gunakan max() agar selalu lebih besar dari safe-area ATAU 56px fallback.
+      */
+      left: max(env(safe-area-inset-left, 0px), 56px);
       top: 50%;
       transform: translateY(-46%);
       display: flex;
