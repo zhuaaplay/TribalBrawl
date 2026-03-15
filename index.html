@@ -2,111 +2,79 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
-  <!--
-    viewport-fit=cover  → konten masuk ke area notch/punch-hole
-    Redmi 10 punch-hole kiri atas, landscape safe-area otomatis handle
-  -->
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-
-  <!-- PWA / WebAPK fullscreen -->
   <meta name="theme-color" content="#F5A11A" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Party Animals" />
   <meta name="application-name" content="Party Animals" />
-  <meta name="description" content="Party Animals Game" />
-
-  <!-- Force landscape on older browsers -->
   <meta name="screen-orientation" content="landscape" />
   <meta name="x5-orientation" content="landscape" />
   <meta name="x5-fullscreen" content="true" />
   <meta name="x5-page-mode" content="app" />
-  <!-- Xiaomi / MIUI specific -->
   <meta name="full-screen" content="yes" />
   <meta name="browsermode" content="application" />
 
   <title>Party Animals</title>
-
   <link rel="manifest" href="./manifest.json" />
-  <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512x512.png" />
-  <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192x192.png" />
-
+  <link rel="apple-touch-icon" sizes="512x512" href="./icons/icon-512.png" />
+  <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192.png" />
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
 
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
-    :root {
-      --orange: #F5A11A;
-      --menu-skew: -3deg;
-      --safe-left:  env(safe-area-inset-left,  0px);
-      --safe-right: env(safe-area-inset-right, 0px);
-      --safe-top:   env(safe-area-inset-top,   0px);
-      --safe-bot:   env(safe-area-inset-bottom,0px);
-    }
-
+    /* Warna solid di html agar TIDAK ada celah/gap sama sekali */
     html {
-      background: #F5A11A;
+      background: #E8950A;
       width: 100%; height: 100%;
       overflow: hidden;
-      margin: 0; padding: 0;
     }
 
     body {
-      width: 100%; height: 100%;
+      width: 100vw;
+      height: 100vh;
       overflow: hidden;
-      background: #F5A11A;
+      background: #E8950A;
       font-family: 'Fredoka One', cursive;
       position: relative;
-      margin: 0; padding: 0;
     }
 
-    /* Full-bleed — oversized 200px in all directions to kill any gap */
-    body::before {
-      content: '';
+    /* Background utama — full cover */
+    .bg {
       position: fixed;
-      top:    -200px;
-      left:   -200px;
-      right:  -200px;
-      bottom: -200px;
-      background: radial-gradient(ellipse 65% 70% at 52% 50%,
-        #FBCF5A 0%, #F5A11A 55%, #D87800 100%);
+      inset: 0;
+      background: radial-gradient(ellipse 70% 75% at 50% 50%,
+        #FBCF5A 0%, #F5A11A 52%, #D87800 100%);
       z-index: 0;
-      pointer-events: none;
     }
 
-    /* Ground shadow under center */
+    /* Ground shadow */
     .ground-shadow {
       position: fixed;
-      bottom: 78px;
+      bottom: 70px;
       left: 50%;
       transform: translateX(-50%);
-      width: 380px; height: 28px;
-      background: radial-gradient(ellipse, rgba(0,0,0,0.16) 0%, transparent 70%);
+      width: 40vw; height: 28px;
+      background: radial-gradient(ellipse, rgba(0,0,0,0.15) 0%, transparent 70%);
       pointer-events: none;
       z-index: 1;
     }
 
-    /* ===== LAYOUT ===== */
+    /* ===== SCREEN ===== */
     .screen {
       position: fixed;
       top: 0; left: 0; right: 0;
       bottom: 62px;
-      display: flex;
-      align-items: center;
       z-index: 10;
     }
 
     /* ===== LEFT MENU ===== */
     .menu-list {
       position: absolute;
-      /*
-        Redmi 10 punch-hole landscape: kamera ada di kiri atas ~40-50px dari tepi.
-        Gunakan max() agar selalu lebih besar dari safe-area ATAU 56px fallback.
-      */
-      left: max(env(safe-area-inset-left, 0px), 56px);
+      left: 56px;
       top: 50%;
       transform: translateY(-46%);
       display: flex;
@@ -116,13 +84,13 @@
 
     .menu-item {
       font-family: 'Fredoka One', cursive;
-      font-size: clamp(18px, 3.8vw, 44px);
+      font-size: clamp(20px, 4vw, 46px);
       color: #fff;
       text-shadow:
         2px 0   0 rgba(0,0,0,0.12),
-        0  3px  0 rgba(0,0,0,0.18),
-        3px 4px 0 rgba(0,0,0,0.09);
-      transform: skewX(var(--menu-skew));
+        0  3px  0 rgba(0,0,0,0.20),
+        3px 4px 0 rgba(0,0,0,0.10);
+      transform: skewX(-3deg);
       display: inline-block;
       cursor: pointer;
       letter-spacing: 1px;
@@ -134,20 +102,20 @@
     .menu-item:active,
     .menu-item:hover {
       color: #FFE566;
-      transform: skewX(var(--menu-skew)) translateX(5px) scale(1.04);
+      transform: skewX(-3deg) translateX(6px) scale(1.04);
     }
-    .menu-item.gap-top { margin-top: 16px; }
+    .menu-item.gap-top { margin-top: 18px; }
 
     /* ===== RIGHT PANEL ===== */
     .right-panel {
       position: absolute;
-      right: max(env(safe-area-inset-right, 0px), 14px);
+      right: 16px;
       top: 50%;
       transform: translateY(-50%);
       display: flex;
       flex-direction: column;
       gap: 10px;
-      width: clamp(150px, 20vw, 210px);
+      width: clamp(150px, 20vw, 215px);
     }
 
     /* Forum card */
@@ -163,11 +131,8 @@
       box-shadow: 0 4px 0 #2A4EBF, 0 6px 18px rgba(0,0,0,0.3);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      transition: transform 0.1s;
-      overflow: hidden;
     }
     .forum-card:active { transform: rotate(1.5deg) skewX(-1deg) scale(0.97); }
-
     .forum-text {
       font-family: 'Fredoka One', cursive;
       font-size: clamp(13px, 1.9vw, 20px);
@@ -192,26 +157,20 @@
       box-shadow: 0 4px 0 #050505, 0 8px 22px rgba(0,0,0,0.45);
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
-      transition: transform 0.1s;
-      position: relative;
     }
     .ads-card:active { transform: rotate(-1deg) skewX(0.5deg) scale(0.97); }
-
     .ads-inner {
       position: relative;
       width: 100%;
-      /* 4:5 ratio */
       padding-top: 125%;
       background: linear-gradient(160deg, #1a0505 0%, #300000 45%, #080000 100%);
     }
-
     .ads-glow {
       position: absolute; inset: 0;
       background:
         radial-gradient(ellipse 55% 45% at 50% 28%, rgba(255,20,0,0.4) 0%, transparent 65%),
         radial-gradient(ellipse 40% 30% at 50% 70%, rgba(180,0,0,0.2) 0%, transparent 60%);
     }
-
     .ads-silhouette {
       position: absolute;
       top: 4%; left: 50%;
@@ -219,16 +178,14 @@
       font-size: clamp(42px, 7vw, 72px);
       filter:
         drop-shadow(0 0 16px rgba(255,0,0,0.9))
-        drop-shadow(0 0 36px rgba(200,0,0,0.6))
-        drop-shadow(0 0 60px rgba(150,0,0,0.3));
-      animation: floatFigure 3s ease-in-out infinite;
+        drop-shadow(0 0 36px rgba(200,0,0,0.6));
+      animation: floatFig 3s ease-in-out infinite;
       line-height: 1;
     }
-    @keyframes floatFigure {
+    @keyframes floatFig {
       0%,100% { transform: translateX(-50%) translateY(0); }
       50%      { transform: translateX(-50%) translateY(-4px); }
     }
-
     .ads-eyes {
       position: absolute;
       top: 27%; left: 50%;
@@ -244,14 +201,13 @@
     }
     .ads-eye:nth-child(2) { animation-delay: 0.3s; }
     @keyframes eyePulse {
-      0%,100% { opacity: 0.8; box-shadow: 0 0 6px #FF2200, 0 0 14px rgba(255,34,0,0.7); }
-      50%      { opacity: 1;   box-shadow: 0 0 10px #FF4400, 0 0 26px rgba(255,68,0,0.95); }
+      0%,100% { box-shadow: 0 0 6px #FF2200, 0 0 14px rgba(255,34,0,0.7); }
+      50%      { box-shadow: 0 0 10px #FF4400, 0 0 26px rgba(255,68,0,0.95); }
     }
-
     .ads-title {
       position: absolute;
-      bottom: 16%;
-      left: 50%; transform: translateX(-50%);
+      bottom: 16%; left: 50%;
+      transform: translateX(-50%);
       text-align: center;
       white-space: nowrap;
     }
@@ -272,15 +228,6 @@
       text-shadow: 0 0 14px rgba(255,30,0,0.8), 2px 2px 0 rgba(0,0,0,0.6);
       line-height: 1;
     }
-
-    /* small skull/logo between THE and LAMB */
-    .ads-logo {
-      display: inline-block;
-      font-size: clamp(10px, 1.4vw, 14px);
-      vertical-align: middle;
-      filter: drop-shadow(0 0 4px rgba(255,0,0,0.7));
-    }
-
     .ads-dots {
       position: absolute;
       bottom: 6%; left: 50%;
@@ -299,32 +246,22 @@
       position: fixed;
       bottom: 0; left: 0; right: 0;
       height: 62px;
-      /* Extend background left/right to cover any safe-area gutters */
-      margin-left:  -1px;
-      margin-right: -1px;
-      /* Pad content away from punch-hole edges */
-      padding-left:  max(env(safe-area-inset-left, 0px), 12px);
-      padding-right: max(env(safe-area-inset-right, 0px), 12px);
       background: linear-gradient(180deg, #FAC940 0%, #F5A500 100%);
       border-top: 3px solid #CC7A00;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      padding: 0 14px;
       z-index: 100;
       box-shadow: 0 -2px 10px rgba(0,0,0,0.18);
     }
 
     .bottom-left, .bottom-right {
-      display: flex;
-      align-items: center;
-      gap: 7px;
+      display: flex; align-items: center; gap: 7px;
     }
 
-    /* Pill buttons */
     .pill {
-      display: flex;
-      align-items: center;
-      gap: 6px;
+      display: flex; align-items: center; gap: 6px;
       background: linear-gradient(180deg, #FFFBEE 0%, #FFE896 100%);
       border: 2.5px solid #CC7A00;
       border-radius: 30px;
@@ -347,11 +284,10 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 14px;
       flex-shrink: 0;
-      box-shadow: 0 2px 0 rgba(0,0,0,0.15);
     }
-    .pill-icon.shop   { background: linear-gradient(135deg, #FF9A3C, #FF5500); }
-    .pill-icon.bone   { background: linear-gradient(135deg, #FFE580, #FFC200); border: 2px solid #CC8800; }
-    .pill-icon.cash   { background: linear-gradient(135deg, #A8FF78, #2ECC40); box-shadow: 0 2px 0 #1a7a20; border-radius: 7px; }
+    .pill-icon.shop { background: linear-gradient(135deg, #FF9A3C, #FF5500); }
+    .pill-icon.bone { background: linear-gradient(135deg, #FFE580, #FFC200); border: 2px solid #CC8800; }
+    .pill-icon.cash { background: linear-gradient(135deg, #A8FF78, #2ECC40); border-radius: 7px; }
 
     .notif-dot {
       position: absolute;
@@ -362,7 +298,6 @@
       border: 1.5px solid #fff;
     }
 
-    /* player pill */
     .player-pill {
       display: flex; align-items: center; gap: 7px;
       background: linear-gradient(180deg, #FFFBEE 0%, #FFE896 100%);
@@ -401,7 +336,6 @@
       background: linear-gradient(90deg, #76FF03, #2ECC40);
       border-radius: 4px;
     }
-
     .btn-round {
       width: 40px; height: 40px;
       background: linear-gradient(180deg, #FFFBEE 0%, #FFE896 100%);
@@ -419,12 +353,10 @@
 </head>
 <body>
 
+  <div class="bg"></div>
   <div class="ground-shadow"></div>
 
-  <!-- MAIN SCREEN -->
   <div class="screen">
-
-    <!-- LEFT MENU -->
     <nav class="menu-list">
       <div class="menu-item">QUICK MATCH</div>
       <div class="menu-item">CUSTOM GAME</div>
@@ -434,16 +366,11 @@
       <div class="menu-item">EXIT GAME</div>
     </nav>
 
-    <!-- RIGHT PANEL -->
     <div class="right-panel">
-
-      <!-- OFFICIAL FORUM -->
       <div class="forum-card">
         <div class="forum-text">OFFICIAL<br>FORUM</div>
         <div class="forum-img">🐾</div>
       </div>
-
-      <!-- ADS: THE LAMB -->
       <div class="ads-card">
         <div class="ads-inner">
           <div class="ads-glow"></div>
@@ -454,7 +381,7 @@
           </div>
           <div class="ads-title">
             <span class="the">THE</span>
-            <span class="lamb"><span class="ads-logo">💀</span> LAMB</span>
+            <span class="lamb"><span>💀</span> LAMB</span>
           </div>
           <div class="ads-dots">
             <div class="ads-dot"></div>
@@ -465,34 +392,26 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
-  <!-- BOTTOM BAR -->
   <div class="bottom-bar">
-
     <div class="bottom-left">
-      <!-- Item Shop -->
       <div class="pill">
         <div class="pill-icon shop">🛍️</div>
         ITEM SHOP
         <div class="notif-dot"></div>
       </div>
-      <!-- Bones currency -->
       <div class="pill">
         <div class="pill-icon bone">🦴</div>
         3000
       </div>
-      <!-- Cash currency -->
       <div class="pill">
         <div class="pill-icon cash">💵</div>
         0
       </div>
     </div>
-
     <div class="bottom-right">
-      <!-- Player -->
       <div class="player-pill">
         <div class="player-avatar">
           🐕
@@ -503,49 +422,30 @@
           <div class="xp-bar"><div class="xp-fill"></div></div>
         </div>
       </div>
-      <!-- Mic off -->
       <div class="btn-round">🎤</div>
-      <!-- Squad counter -->
-      <div class="pill" style="padding: 5px 13px;">👥 0/5</div>
+      <div class="pill" style="padding:5px 13px;">👥 0/5</div>
     </div>
-
   </div>
 
   <script>
-    // ---- Service Worker ----
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js', { scope: './' })
-          .then(r => console.log('SW ok:', r.scope))
-          .catch(e => console.warn('SW fail:', e));
+        navigator.serviceWorker.register('./sw.js', { scope: './' });
       });
     }
 
-    // ---- Lock orientation to landscape (runtime API) ----
-    // Works inside WebAPK / standalone display mode
     const lockLandscape = async () => {
       try {
         if (screen.orientation && screen.orientation.lock) {
           await screen.orientation.lock('landscape');
         }
-      } catch(e) {
-        // Silently ignore if not supported (e.g. browser tab)
-      }
+      } catch(e) {}
     };
-
-    // Try immediately and also after user gesture (required by some browsers)
     lockLandscape();
-    document.addEventListener('click', lockLandscape, { once: true });
+    document.addEventListener('click',      lockLandscape, { once: true });
     document.addEventListener('touchstart', lockLandscape, { once: true });
 
-    // ---- Prevent scroll / pull-to-refresh ----
     document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
-
-    // ---- PWA install prompt ----
-    let deferredPrompt;
-    window.addEventListener('beforeinstallprompt', e => {
-      deferredPrompt = e;
-    });
   </script>
 
 </body>
