@@ -2450,21 +2450,26 @@ async function slideIn() {
 
 // ── Avatar Picker ──
 let avatarDataUrl = null;
-document.getElementById('avatar-wrap').addEventListener('click', () => {
-  document.getElementById('avatar-input').click();
-});
-document.getElementById('avatar-input').addEventListener('change', function() {
-  const file = this.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = e => {
-    cropToSquare(e.target.result, cropped => {
-      avatarDataUrl = cropped;
-      document.getElementById('avatar-preview').src = cropped;
-    });
-  };
-  reader.readAsDataURL(file);
-});
+const _avatarWrap  = document.getElementById('avatar-wrap');
+const _avatarInput = document.getElementById('avatar-input');
+if (_avatarWrap) {
+  _avatarWrap.addEventListener('click', () => { _avatarInput.click(); });
+}
+if (_avatarInput) {
+  _avatarInput.addEventListener('change', function() {
+    const file = this.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      cropToSquare(e.target.result, cropped => {
+        avatarDataUrl = cropped;
+        const prev = document.getElementById('avatar-preview');
+        if (prev) prev.src = cropped;
+      });
+    };
+    reader.readAsDataURL(file);
+  });
+}
 
 function cropToSquare(src, cb) {
   const img = new Image();
@@ -2501,38 +2506,37 @@ function closeModal() {
   }, 270);
 }
 
-// ── Save Account ──
-document.getElementById('btn-save').addEventListener('click', async () => {
-  const fnEl = document.getElementById('input-firstname');
-  const lnEl = document.getElementById('input-lastname');
-  const fn   = fnEl.value.trim();
-  const ln   = lnEl.value.trim();
+// ── Save Account (modal lama - optional) ──
+const _btnSave = document.getElementById('btn-save');
+if (_btnSave) {
+  _btnSave.addEventListener('click', async () => {
+    const fnEl = document.getElementById('input-firstname');
+    const lnEl = document.getElementById('input-lastname');
+    const fn   = fnEl.value.trim();
+    const ln   = lnEl.value.trim();
 
-  fnEl.classList.remove('error');
-  lnEl.classList.remove('error');
+    fnEl.classList.remove('error');
+    lnEl.classList.remove('error');
 
-  if (fn.length < 3) { fnEl.classList.add('error'); return; }
-  if (ln.length > 0 && ln.length < 3) { lnEl.classList.add('error'); return; }
+    if (fn.length < 3) { fnEl.classList.add('error'); return; }
+    if (ln.length > 0 && ln.length < 3) { lnEl.classList.add('error'); return; }
 
-  const account = {
-    firstname: fn,
-    lastname:  ln,
-    avatar:    avatarDataUrl || 'assets/user.png'
-  };
-  saveAccount(account);
+    const account = {
+      firstname: fn,
+      lastname:  ln,
+      avatar:    avatarDataUrl || 'assets/user.png'
+    };
+    saveAccount(account);
 
-  closeModal();
-  hideTab();
+    closeModal();
+    hideTab();
 
-  const displayName = fn + (ln ? ' ' + ln : '');
-
-  // Tampilkan Check account lagi (mencari akun baru)
-  await showLoadingText('Check account', 4000);
-
-  // Akun ditemukan → notif + Tap To Continue
-  showNotif(account.avatar, displayName);
-  showTab('Tap To Continue');
-});
+    const displayName = fn + (ln ? ' ' + ln : '');
+    await showLoadingText('Check account', 4000);
+    showNotif(account.avatar, displayName);
+    showTab('Tap To Continue');
+  });
+}
 
 // ── Tap To Continue Handler ──
 bottomTab.addEventListener('click', async () => {
@@ -2694,19 +2698,6 @@ function showMenu() {
   setNormalEffect(2.5);
 }
 
-// ── Tap Circle Handler (ganti PIN) ──
-// Tap di mana saja → trigger pinCorrectHandler (fullscreen + lanjut)
-const tapStartEl = document.getElementById('tap-start');
-
-function handleTapCircle() {
-  tapStartEl.removeEventListener('touchstart', handleTapCircle);
-  tapStartEl.removeEventListener('click',      handleTapCircle);
-  pinCorrectHandler();
-}
-
-tapStartEl.addEventListener('touchstart', handleTapCircle, { passive: true });
-tapStartEl.addEventListener('click',      handleTapCircle);
-
 // ── Dismiss tap-start overlay ──
 async function dismissTapStart() {
   const tapEl = document.getElementById('tap-start');
@@ -2717,6 +2708,21 @@ async function dismissTapStart() {
 }
 
 let pinCorrectHandler = () => {};
+
+// ── Tap Circle Handler ──
+const tapStartEl = document.getElementById('tap-start');
+let tapFired = false;
+
+function handleTapCircle() {
+  if (tapFired) return;
+  tapFired = true;
+  tapStartEl.removeEventListener('touchstart', handleTapCircle);
+  tapStartEl.removeEventListener('click',      handleTapCircle);
+  pinCorrectHandler();
+}
+
+tapStartEl.addEventListener('touchstart', handleTapCircle, { passive: true });
+tapStartEl.addEventListener('click',      handleTapCircle);
 
 // ── setStatus helper untuk loading screen baru ──
 const statusLabel = document.getElementById('wm-status-label');
