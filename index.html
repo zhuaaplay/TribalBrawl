@@ -51,7 +51,7 @@ html, body {
 /* ── TAP TO START OVERLAY ── */
 #tap-start {
   position: fixed; inset: 0;
-  background: #111;
+  background: #000;
   z-index: 99999;
   display: flex;
   align-items: center;
@@ -59,41 +59,6 @@ html, body {
   -webkit-tap-highlight-color: transparent;
   cursor: pointer;
   user-select: none;
-}
-
-/* Bulatan pulse */
-#tap-circle {
-  width: 64px; height: 64px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.15);
-  position: relative;
-  display: flex; align-items: center; justify-content: center;
-}
-#tap-circle::before,
-#tap-circle::after {
-  content: '';
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.08);
-  animation: tapRipple 2s ease-out infinite;
-}
-#tap-circle::before { width: 100%; height: 100%; animation-delay: 0s; }
-#tap-circle::after  { width: 100%; height: 100%; animation-delay: 0.7s; }
-
-#tap-circle .dot {
-  width: 18px; height: 18px;
-  border-radius: 50%;
-  background: rgba(255,255,255,0.6);
-  animation: dotFade 2s ease-in-out infinite;
-}
-
-@keyframes tapRipple {
-  0%   { transform: scale(1);   opacity: 0.5; }
-  100% { transform: scale(3.5); opacity: 0; }
-}
-@keyframes dotFade {
-  0%,100% { opacity: 0.4; }
-  50%     { opacity: 1; }
 }
 
 /* ── SCREENS ── */
@@ -1680,12 +1645,8 @@ html, body {
   <div>Putar perangkat ke mode Landscape</div>
 </div>
 
-<!-- Tap To Start: fullscreen gate -->
-<div id="tap-start">
-  <div id="tap-circle">
-    <div class="dot"></div>
-  </div>
-</div>
+<!-- Tap To Start: layar hitam, tap untuk fullscreen -->
+<div id="tap-start"></div>
 
 <!-- Screen 1: Splashscreen -->
 <div id="screen-splash" class="screen active">
@@ -2698,31 +2659,75 @@ function showMenu() {
   setNormalEffect(2.5);
 }
 
-// ── Dismiss tap-start overlay ──
-async function dismissTapStart() {
+// ── Dismiss tap-start ──
+function dismissTapStart() {
   const tapEl = document.getElementById('tap-start');
-  tapEl.style.transition = 'opacity 0.4s ease';
-  tapEl.style.opacity = '0';
-  await wait(420);
-  tapEl.style.display = 'none';
+  if (tapEl) tapEl.style.display = 'none';
 }
 
-let pinCorrectHandler = () => {};
+// ── Main Sequence (dipanggil langsung dari tap) ──
+async function mainSequence() {
+  // Layar hitam 2 detik
+  showScreen('screen-black');
+  await wait(2000);
 
-// ── Tap Circle Handler ──
+  // Loading screen
+  showScreen('screen-load');
+
+  // Musik
+  buildAudioGraph();
+  lobbyMusic.currentTime = 0;
+  lobbyMusic.play().then(() => {
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    setLoadingEffect();
+  }).catch(() => {});
+
+  // Loading sequence ~50 detik
+  await newLoadingSequence();
+
+  // Ke main menu
+  const account = getAccount();
+  const displayName = account ? account.firstname + (account.lastname ? ' ' + account.lastname : '') : '';
+
+  prepareMenu();
+  await slideShow(() => { showMenu(); }, 10000);
+  await slideOut();
+  setNormalEffect(2.5);
+
+  if (account) {
+    showNotif(account.avatar || 'assets/user.png', displayName);
+    showTab('Tap To Continue');
+  } else {
+    showTab('Create Account');
+  }
+}
+
+// ── Tap Handler — fullscreen dari gesture, lalu langsung sequence ──
 const tapStartEl = document.getElementById('tap-start');
 let tapFired = false;
 
-function handleTapCircle() {
+async function handleTap(e) {
   if (tapFired) return;
   tapFired = true;
-  tapStartEl.removeEventListener('touchstart', handleTapCircle);
-  tapStartEl.removeEventListener('click',      handleTapCircle);
-  pinCorrectHandler();
+  tapStartEl.removeEventListener('touchstart', handleTap);
+  tapStartEl.removeEventListener('click',      handleTap);
+
+  // Fullscreen dari gesture user (wajib dari dalam event)
+  await goFullscreenLandscape();
+
+  // Sembunyikan tap-start
+  dismissTapStart();
+
+  // Langsung jalankan sequence
+  mainSequence();
 }
 
-tapStartEl.addEventListener('touchstart', handleTapCircle, { passive: true });
-tapStartEl.addEventListener('click',      handleTapCircle);
+tapStartEl.addEventListener('touchstart', handleTap, { passive: true });
+tapStartEl.addEventListener('click',      handleTap);
+
+// runSequence tetap ada tapi tidak dipanggil (kompatibilitas)
+async function runSequence() {}
+window.addEventListener('load', () => {});
 
 // ── setStatus helper untuk loading screen baru ──
 const statusLabel = document.getElementById('wm-status-label');
@@ -2819,63 +2824,12 @@ async function newLoadingSequence() {
   await setStatus('Completed',       '', 2000);
 }
 
-// ── Main Sequence ──
-async function runSequence() {
-  const tapEl = document.getElementById('tap-start');
-
-  // 0. Tunggu PIN benar — gesture tersedia untuk audio & fullscreen
-  await new Promise(resolve => {
-    pinCorrectHandler = async () => {
-      await goFullscreenLandscape();
-      await dismissTapStart();
-      resolve();
-    };
-  });
-
-  // 1. Splashscreen 3 detik
-  showScreen('screen-splash');
-  await wait(3000);
-
-  // 2. Layar hitam 3 detik
-  showScreen('screen-black');
-  await wait(3000);
-
-  // 3. Loading screen muncul (watermark style)
-  showScreen('screen-load');
-
-  // Musik mulai
-  buildAudioGraph();
-  lobbyMusic.currentTime = 0;
-  lobbyMusic.play().then(() => {
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    setLoadingEffect();
-  }).catch(() => {});
-
-  // Jalankan loading sequence baru
-  await newLoadingSequence();
-
-  // Setelah completed: animasi turun ke main menu
-  const account = getAccount();
-  const displayName = account ? account.firstname + (account.lastname ? ' ' + account.lastname : '') : '';
-
-  // Siapkan menu di belakang
-  prepareMenu();
-
-  // Slide transition
-  await slideShow(() => { showMenu(); }, 10000);
-  await slideOut();
-  setNormalEffect(2.5);
-
-  // Notif & tab
-  if (account) {
-    showNotif(account.avatar || 'assets/user.png', displayName);
-    showTab('Tap To Continue');
-  } else {
-    showTab('Create Account');
+window.addEventListener('load', () => {
+  // Service worker
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   }
-}
-
-window.addEventListener('load', runSequence);
+});
 
 // ══════════════════════════════════════════════════════════
 // LOBBY LAYER CAROUSEL — Sistem posisi ABSOLUT, anti-bug
