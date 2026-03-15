@@ -1,4 +1,4 @@
-const CACHE_NAME = 'helloworld-v2';
+const CACHE_NAME = 'party-animals-v3';
 const ASSETS = [
   './',
   './index.html',
