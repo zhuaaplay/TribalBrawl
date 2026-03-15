@@ -29,24 +29,43 @@
     /* Warna solid di html agar TIDAK ada celah/gap sama sekali */
     html {
       background: #E8950A;
-      width: 100%; height: 100%;
+      /* 100dvh = dynamic viewport height, respects WebAPK standalone chrome */
+      width: 100%;
+      height: 100%;
       overflow: hidden;
     }
 
     body {
       width: 100vw;
-      height: 100vh;
+      /* dvh covers the actual visible area in standalone mode */
+      height: 100dvh;
+      min-height: -webkit-fill-available;
       overflow: hidden;
       background: #E8950A;
       font-family: 'Fredoka One', cursive;
       position: relative;
     }
 
-    /* Background utama — full cover */
+    /*
+      Di WebAPK standalone, Redmi 10 masih menampilkan status bar tipis.
+      Kita buat pseudo-element yang menutupi area atas dengan warna sama.
+      Ini membuat status bar "invisible" karena warnanya menyatu.
+    */
+    html::before {
+      content: '';
+      position: fixed;
+      top: -60px; left: -60px; right: -60px;
+      height: calc(env(safe-area-inset-top, 30px) + 60px);
+      background: #E8950A;
+      z-index: 99998;
+      pointer-events: none;
+    }
+
+    /* Background utama — naik 100px ke atas agar cover area punch-hole/status bar */
     .bg {
       position: fixed;
-      inset: 0;
-      background: radial-gradient(ellipse 70% 75% at 50% 50%,
+      top: -100px; left: -100px; right: -100px; bottom: -100px;
+      background: radial-gradient(ellipse 70% 75% at 50% 55%,
         #FBCF5A 0%, #F5A11A 52%, #D87800 100%);
       z-index: 0;
     }
@@ -513,10 +532,16 @@
     overlay.addEventListener('click',      enterFullscreen, { once: true });
     overlay.addEventListener('touchstart', enterFullscreen, { once: true, passive: true });
 
-    // Jika sudah fullscreen/WebAPK, skip overlay langsung
-    if (document.fullscreenElement || window.navigator.standalone ||
-        window.matchMedia('(display-mode: fullscreen)').matches) {
+    // Cek apakah berjalan sebagai WebAPK / installed PWA
+    const isInstalled =
+      window.matchMedia('(display-mode: fullscreen)').matches ||
+      window.matchMedia('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+
+    if (isInstalled) {
+      // WebAPK: langsung fullscreen + landscape tanpa perlu tap
       overlay.style.display = 'none';
+      goFullscreenLandscape();
     }
 
     // Re-trigger jika keluar fullscreen (misal notif bar MIUI ditarik)
